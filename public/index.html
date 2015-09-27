@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>CallNotifier</title>
+</head>
+
+<body>
+    <!-- <button onclick="playSound('outgoing');"></button> -->
+    <audio id="outgoing" preload="auto">
+        <source src="ring.wav" type="audio/wav">
+        <source src="ring.mp3" type="audio/mpeg">
+    </audio>
+    <script src="./bower_components/socket.io-client/socket.io.js" charset="utf-8"></script>
+    <script src="./bower_components/jquery/dist/jquery.min.js" charset="utf-8"></script>
+    <script>
+        var isMobile = false;
+        var isChrome = false;
+        var ua = navigator.userAgent;
+
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(ua))
+            isMobile = true;
+        if (/Chrome/i.test(ua))
+            isChrome = true;
+
+        var socket = io( /*"http://zetaone:52003"*/ );
+
+        socket.on("phone", function(callInfo) {
+
+            switch (callInfo.type) {
+                case "outgoing":
+                    // if (!isMobile && isChrome)
+                    //     alert("Ausgehendes Gespäch: " + callInfo.to);
+                    break;
+                case "incoming":
+                    var $audioElement = $("#outgoing");
+                    $audioElement.get(0).loop = true;
+                    $audioElement.get(0).play();
+
+                    // if (!isMobile && isChrome)
+                    // alert("Eingehender Anruf: " + callInfo.from);
+                    break;
+                case "connect":
+                    var $audioElement = $("#outgoing");
+                    $audioElement.get(0).pause();
+                    $audioElement.get(0).currentTime = 0;
+                    break;
+                case "disconnect":
+                    var $audioElement = $("#outgoing");
+                    $audioElement.get(0).pause();
+                    $audioElement.get(0).currentTime = 0;
+
+                    // if (!isMobile && isChrome)
+                    //     alert("Verbindung beendet, Dauer: " + callInfo.duration + " Sekunden");
+                    break;
+            }
+        })
+    </script>
+</body>
+
+</html>
