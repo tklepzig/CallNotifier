@@ -1,13 +1,13 @@
 /*
 
 // send to current request socket client
- socket.emit('message', "this is a test");
+ socket.emit('message', 'this is a test');
 
  // sending to all clients, include sender
- io.sockets.emit('message', "this is a test");
+ io.sockets.emit('message', 'this is a test');
 
  // sending to all clients except sender
- socket.broadcast.emit('message', "this is a test");
+ socket.broadcast.emit('message', 'this is a test');
 
  // sending to all clients in 'game' room(channel) except sender
  socket.broadcast.to('game').emit('message', 'nice game');
@@ -20,14 +20,16 @@
 
 */
 
-var express = require("express");
+'use strict';
+
+var express = require('express');
 var app = express();
-var http = require("http").Server(app);
-var io = require("socket.io")(http);
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 var net = require('net');
 var mqtt = require('mqtt');
 var options = {
-    host: "zetaone",
+    host: 'zetaone',
     port: 1883,
     protocolId: 'MQIsdp',
     protocolVersion: 3
@@ -35,13 +37,19 @@ var options = {
 var mqttClient = mqtt.connect(options);
 
 mqttClient.on('error', function(e) {
-    console.log("Error");
+    console.log('Error: ' + e);
 
 });
 
 mqttClient.on('connect', function() {
-    console.log("Connected to MQTT Broker");
+    console.log('Connected to MQTT Broker');
+    mqttClient.subscribe('ws-test');
+});
 
+mqttClient.on('message', function(topic, message) {
+    if (topic === 'ws-test') {
+        io.sockets.emit('ws-test', message.toString());
+    }
 });
 
 
@@ -64,26 +72,26 @@ function ab2str(buf) {
 
 client.on('data', function(data) {
 
-    var callInfo = ab2str(data).split(";");
+    var callInfo = ab2str(data).split(';');
 
     var result = {};
 
     switch (callInfo[1]) {
-        case "CALL":
-            result.type = "outgoing";
+        case 'CALL':
+            result.type = 'outgoing';
             result.from = callInfo[4];
             result.to = callInfo[5];
             break;
-        case "RING":
-            result.type = "incoming";
+        case 'RING':
+            result.type = 'incoming';
             result.from = callInfo[3];
             result.to = callInfo[4];
             break;
-        case "CONNECT":
-            result.type = "connect";
+        case 'CONNECT':
+            result.type = 'connect';
             break;
-        case "DISCONNECT":
-            result.type = "disconnect";
+        case 'DISCONNECT':
+            result.type = 'disconnect';
             result.duration = callInfo[3];
             break;
         default:
@@ -92,7 +100,7 @@ client.on('data', function(data) {
 
     // switch (items[1])
     // {
-    //     case "CALL":
+    //     case 'CALL':
     //         {
     //             OnNewCall(this, new CallEventArgs
     //             {
@@ -104,7 +112,7 @@ client.on('data', function(data) {
     //             });
     //             break;
     //         }
-    //     case "RING":
+    //     case 'RING':
     //         {
     //             OnNewCall(this, new CallEventArgs
     //             {
@@ -116,7 +124,7 @@ client.on('data', function(data) {
     //             });
     //             break;
     //         }
-    //     case "CONNECT":
+    //     case 'CONNECT':
     //         {
     //             OnConnected(this, new ConnectedEventArgs
     //             {
@@ -126,7 +134,7 @@ client.on('data', function(data) {
     //             });
     //             break;
     //         }
-    //     case "DISCONNECT":
+    //     case 'DISCONNECT':
     //         {
     //             OnDisconnected(this, new DisconnectedEventArgs
     //             {
@@ -147,12 +155,12 @@ client.on('close', function() {
     console.log('Connection closed');
 });
 
-app.use(express.static(__dirname + "/public"));
+app.use(express.static(__dirname + '/public'));
 
-app.get("/", function(req, res) {
-    res.sendFile(__dirname + "/public/index.html");
+app.get('/', function(req, res) {
+    res.sendFile(__dirname + '/public/index.html');
 });
 
 http.listen(52003, function() {
-    console.log("listening on *:52003");
+    console.log('listening on *:52003');
 });
